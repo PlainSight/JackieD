@@ -10,6 +10,12 @@ var canvasContext = canvas.getContext("2d")
 canvas.width = window.outerWidth;
 canvas.height = window.outerHeight;
 
+// fix canvas size if it doesn't have the correct dimensions on load
+setTimeout(function() {
+	canvas.width = window.outerWidth;
+	canvas.height = window.outerHeight;
+}, 500);
+
 window.addEventListener('resize', function() {
 	canvas.width = window.outerWidth;
 	canvas.height = window.outerHeight;
