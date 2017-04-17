@@ -163,6 +163,10 @@ function grabCard(co) {
 }
 
 function getMousePos(canvas, e) {
+	if(event.targetTouches) {
+		e = event.targetTouches[0];
+	}
+
 	var rect = canvas.getBoundingClientRect();
   return {
     x: e.clientX - rect.left,
