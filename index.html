@@ -7,8 +7,14 @@
 
 var canvas = document.getElementById("can");
 var canvasContext = canvas.getContext("2d")
-canvas.width = 600;
-canvas.height = 600;
+canvas.width = window.outerWidth;
+canvas.height = window.outerHeight;
+
+var pileX = 40;
+var pileY = 40;
+
+var cardWidth = 73;
+var cardHeight = 98;
 
 var cardsImage = new Image();
 cardsImage.src = "cards.jpg";
@@ -36,25 +42,31 @@ function sprite(options) {
 		sy: options.sy,	//start y
 		gx: 0,
 		gy: 0,
-		x: 40,
-		y: 40,
-		grabbed: false
+		x: pileX,
+		y: pileY
 	};
 
 	sp.willGrab = function(x, y) {
 		if (x >= sp.x && x <= sp.x + sp.width &&
 			y >= sp.y && y <= sp.y + sp.height) {
-			gx = sp.x - x;
-			gy = sp.y - y;
+			sp.gx = sp.x - x;
+			sp.gy = sp.y - y;
 
 			return true;
 		}
 		return false;
 	};
 
+	sp.resetLocation = function(x, y) {
+		sp.gx = 0;
+		sp.gy = 0;
+		sp.x = x;
+		sp.y = y;
+	}
+
 	sp.setLocation = function(x, y) {
-		sp.x = x + gx;
-		sp.y = y + gy;
+		sp.x = x + sp.gx;
+		sp.y = y + sp.gy;
 	};
 
 	sp.renderBack = function() {
@@ -115,6 +127,24 @@ var cardIndex = 0;
 var topCard = allCards[cardIndex];
 var nextCard = allCards[cardIndex+1];
 
+function restart() {
+	shuffle(allCards);
+
+	for(var i = 0; i < allCards.length; i++) {
+		allCards[i].resetLocation(pileX, pileY);
+	}
+
+	cardIndex = 0;
+	topCard = allCards[cardIndex];
+ 	nextCard = allCards[cardIndex+1];
+ 	grabbedCard = null;
+}
+
+function isOffPile(card) {
+	return (card.x + card.width < pileX || card.x - card.width > pileX || 
+	card.y + card.height < pileY || card.y - card.height > pileY);
+}
+
 function grabCard(co) {
 	if(topCard && topCard.willGrab(co.x, co.y)) {
 		return topCard;
@@ -136,11 +166,15 @@ function mouseDown(e) {
 
 function mouseUp(e) {
 	var co = getMousePos(canvas, e);
-	if(grabbedCard) {
+	if(grabbedCard && isOffPile(grabbedCard)) {
 		grabbedCard = null;
 		cardIndex++;
 		topCard = allCards[cardIndex];
 		nextCard = allCards[cardIndex+1];
+
+		if(topCard == null) {
+			restart();
+		}
 	}
 }
 
@@ -171,7 +205,7 @@ function renderLoop(step) {
 	}
 	if(topCard) {
 		// render the grabbed Card
-		if(grabbedCard) {
+		if(grabbedCard && isOffPile(grabbedCard)) {
 			topCard.render();
 		} else {
 			topCard.renderBack();
