@@ -5,218 +5,219 @@
 
 <script>
 
-var canvas = document.getElementById("can");
-var canvasContext = canvas.getContext("2d")
-canvas.width = window.outerWidth;
-canvas.height = window.outerHeight;
+window.onload = function() {
+	var canvas = document.getElementById("can");
+	var canvasContext = canvas.getContext("2d")
+	canvas.width = window.outerWidth;
+	canvas.height = window.outerHeight;
 
-var pileX = 40;
-var pileY = 40;
+	var pileX = 40;
+	var pileY = 40;
 
-var cardWidth = 73;
-var cardHeight = 98;
+	var cardWidth = 73;
+	var cardHeight = 98;
 
-var cardsImage = new Image();
-cardsImage.src = "cards.jpg";
-var cardBackImage = new Image();
-cardBackImage.src = "cardback.jpg";
+	var cardsImage = new Image();
+	cardsImage.src = "cards.jpg";
+	var cardBackImage = new Image();
+	cardBackImage.src = "cardback.jpg";
 
-function shuffle(a) {
-  var j, x, i;
-  for (i = a.length; i; i--) {
-    j = Math.floor(Math.random() * i);
-    x = a[i - 1];
-    a[i - 1] = a[j];
-    a[j] = x;
-  }
-}
+	function shuffle(a) {
+	  var j, x, i;
+	  for (i = a.length; i; i--) {
+	    j = Math.floor(Math.random() * i);
+	    x = a[i - 1];
+	    a[i - 1] = a[j];
+	    a[j] = x;
+	  }
+	}
 
-function sprite(options) {
-	var sp = {
-		context: options.context,
-		width: options.width,
-		height: options.height,
-		image: options.image,
-		cardBack: options.back,
-		sx: options.sx,	//start x
-		sy: options.sy,	//start y
-		gx: 0,
-		gy: 0,
-		x: pileX,
-		y: pileY
-	};
+	function sprite(options) {
+		var sp = {
+			context: options.context,
+			width: options.width,
+			height: options.height,
+			image: options.image,
+			cardBack: options.back,
+			sx: options.sx,	//start x
+			sy: options.sy,	//start y
+			gx: 0,
+			gy: 0,
+			x: pileX,
+			y: pileY
+		};
 
-	sp.willGrab = function(x, y) {
-		if (x >= sp.x && x <= sp.x + sp.width &&
-			y >= sp.y && y <= sp.y + sp.height) {
-			sp.gx = sp.x - x;
-			sp.gy = sp.y - y;
+		sp.willGrab = function(x, y) {
+			if (x >= sp.x && x <= sp.x + sp.width &&
+				y >= sp.y && y <= sp.y + sp.height) {
+				sp.gx = sp.x - x;
+				sp.gy = sp.y - y;
 
-			return true;
+				return true;
+			}
+			return false;
+		};
+
+		sp.resetLocation = function(x, y) {
+			sp.gx = 0;
+			sp.gy = 0;
+			sp.x = x;
+			sp.y = y;
 		}
-		return false;
-	};
 
-	sp.resetLocation = function(x, y) {
-		sp.gx = 0;
-		sp.gy = 0;
-		sp.x = x;
-		sp.y = y;
+		sp.setLocation = function(x, y) {
+			sp.x = x + sp.gx;
+			sp.y = y + sp.gy;
+		};
+
+		sp.renderBack = function() {
+			sp.context.drawImage(
+				sp.cardBack,
+				0,
+				0,
+				sp.width,
+				sp.height,
+				sp.x,
+				sp.y,
+				sp.width,
+				sp.height
+			);
+		};
+
+		sp.render = function() {
+			sp.context.drawImage(
+				sp.image,
+				sp.sx,
+				sp.sy,
+				sp.width,
+				sp.height,
+				sp.x,
+				sp.y,
+				sp.width,
+				sp.height
+			);
+		};
+
+		return sp;
 	}
 
-	sp.setLocation = function(x, y) {
-		sp.x = x + sp.gx;
-		sp.y = y + sp.gy;
-	};
+	var allCards = [];
+	var grabbedCard = null;
 
-	sp.renderBack = function() {
-		sp.context.drawImage(
-			sp.cardBack,
-			0,
-			0,
-			sp.width,
-			sp.height,
-			sp.x,
-			sp.y,
-			sp.width,
-			sp.height
-		);
-	};
+	for(var s = 0; s < 4; s++) {
+		for(var r = 0; r < 13; r++) {
+			var card = sprite({
+				context: canvasContext,
+				width: 73,
+				height: 98,
+				image: cardsImage,
+				back: cardBackImage,
+				sx: 73 * r,
+				sy: 98 * s
+			});
 
-	sp.render = function() {
-		sp.context.drawImage(
-			sp.image,
-			sp.sx,
-			sp.sy,
-			sp.width,
-			sp.height,
-			sp.x,
-			sp.y,
-			sp.width,
-			sp.height
-		);
-	};
-
-	return sp;
-}
-
-var allCards = [];
-var grabbedCard = null;
-
-for(var s = 0; s < 4; s++) {
-	for(var r = 0; r < 13; r++) {
-		var card = sprite({
-			context: canvasContext,
-			width: 73,
-			height: 98,
-			image: cardsImage,
-			back: cardBackImage,
-			sx: 73 * r,
-			sy: 98 * s
-		});
-
-		allCards.push(card);
+			allCards.push(card);
+		}
 	}
-}
 
-//shuffle
-shuffle(allCards);
-
-var cardIndex = 0;
-
-var topCard = allCards[cardIndex];
-var nextCard = allCards[cardIndex+1];
-
-function restart() {
+	//shuffle
 	shuffle(allCards);
 
-	for(var i = 0; i < allCards.length; i++) {
-		allCards[i].resetLocation(pileX, pileY);
-	}
+	var cardIndex = 0;
 
-	cardIndex = 0;
-	topCard = allCards[cardIndex];
- 	nextCard = allCards[cardIndex+1];
- 	grabbedCard = null;
-}
+	var topCard = allCards[cardIndex];
+	var nextCard = allCards[cardIndex+1];
 
-function isOffPile(card) {
-	return (card.x + card.width < pileX || card.x - card.width > pileX || 
-	card.y + card.height < pileY || card.y - card.height > pileY);
-}
+	function restart() {
+		shuffle(allCards);
 
-function grabCard(co) {
-	if(topCard && topCard.willGrab(co.x, co.y)) {
-		return topCard;
-	}
-}
+		for(var i = 0; i < allCards.length; i++) {
+			allCards[i].resetLocation(pileX, pileY);
+		}
 
-function getMousePos(canvas, e) {
-	var rect = canvas.getBoundingClientRect();
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
-  };
-}
-
-function mouseDown(e) {
-	var co = getMousePos(canvas, e);
-	grabbedCard = grabCard(co);
-}
-
-function mouseUp(e) {
-	var co = getMousePos(canvas, e);
-	if(grabbedCard && isOffPile(grabbedCard)) {
-		grabbedCard = null;
-		cardIndex++;
+		cardIndex = 0;
 		topCard = allCards[cardIndex];
-		nextCard = allCards[cardIndex+1];
+	 	nextCard = allCards[cardIndex+1];
+	 	grabbedCard = null;
+	}
 
-		if(topCard == null) {
-			restart();
+	function isOffPile(card) {
+		return (card.x + card.width < pileX || card.x - card.width > pileX || 
+		card.y + card.height < pileY || card.y - card.height > pileY);
+	}
+
+	function grabCard(co) {
+		if(topCard && topCard.willGrab(co.x, co.y)) {
+			return topCard;
 		}
 	}
-}
 
-function mouseMove(e) {
-	var co = getMousePos(canvas, e);
-	if(grabbedCard) {
-		grabbedCard.setLocation(co.x, co.y);
+	function getMousePos(canvas, e) {
+		var rect = canvas.getBoundingClientRect();
+	  return {
+	    x: e.clientX - rect.left,
+	    y: e.clientY - rect.top
+	  };
 	}
-}
-canvas.addEventListener("mousedown", mouseDown, false);
-canvas.addEventListener("mouseup", mouseUp, false);
-canvas.addEventListener("mousemove", mouseMove, false);
 
-function renderLoop(step) {
-	//for(var i = 0; i < allCards.length; i++) {
-		//allCards[i].setLocation((i % 13) * 73, Math.floor(i / 13) * 98);
-		//allCards[i].render();
-	//}
-	// clear the canvas
-	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-	// render dead cards
-	for(var i = 0; i < cardIndex; i++) {
-		allCards[i].render();
+	function mouseDown(e) {
+		var co = getMousePos(canvas, e);
+		grabbedCard = grabCard(co);
 	}
-	// render the top of the pack
-	if(nextCard) {
-		nextCard.renderBack();
-	}
-	if(topCard) {
-		// render the grabbed Card
+
+	function mouseUp(e) {
+		var co = getMousePos(canvas, e);
 		if(grabbedCard && isOffPile(grabbedCard)) {
-			topCard.render();
-		} else {
-			topCard.renderBack();
+			grabbedCard = null;
+			cardIndex++;
+			topCard = allCards[cardIndex];
+			nextCard = allCards[cardIndex+1];
+
+			if(topCard == null) {
+				restart();
+			}
 		}
 	}
-	
+
+	function mouseMove(e) {
+		var co = getMousePos(canvas, e);
+		if(grabbedCard) {
+			grabbedCard.setLocation(co.x, co.y);
+		}
+	}
+	canvas.addEventListener("mousedown", mouseDown, false);
+	canvas.addEventListener("mouseup", mouseUp, false);
+	canvas.addEventListener("mousemove", mouseMove, false);
+
+	function renderLoop(step) {
+		//for(var i = 0; i < allCards.length; i++) {
+			//allCards[i].setLocation((i % 13) * 73, Math.floor(i / 13) * 98);
+			//allCards[i].render();
+		//}
+		// clear the canvas
+		canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+		// render dead cards
+		for(var i = 0; i < cardIndex; i++) {
+			allCards[i].render();
+		}
+		// render the top of the pack
+		if(nextCard) {
+			nextCard.renderBack();
+		}
+		if(topCard) {
+			// render the grabbed Card
+			if(grabbedCard && isOffPile(grabbedCard)) {
+				topCard.render();
+			} else {
+				topCard.renderBack();
+			}
+		}
+
+		window.requestAnimationFrame(renderLoop);
+	}
 
 	window.requestAnimationFrame(renderLoop);
-}
-
-window.requestAnimationFrame(renderLoop);
+};
 
 </script>
 </body>
