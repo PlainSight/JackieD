@@ -196,8 +196,11 @@ function mouseMove(e) {
 	}
 }
 canvas.addEventListener("mousedown", mouseDown, false);
+canvas.addEventListener("touchstart", mouseDown, false);
 canvas.addEventListener("mouseup", mouseUp, false);
+canvas.addEventListener("touchend", mouseUp, false);
 canvas.addEventListener("mousemove", mouseMove, false);
+canvas.addEventListener("touchmove", mouseMove, false);
 
 function renderLoop(step) {
 	//for(var i = 0; i < allCards.length; i++) {
